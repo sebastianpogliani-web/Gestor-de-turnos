@@ -156,12 +156,18 @@ def replace_eventos(html: str, events: list) -> str:
 
 def replace_timestamp(html: str, now: datetime.datetime) -> str:
     stamp = f"Actualizado: {now.day:02d} {MESES[now.month-1]} · {now.strftime('%H:%M')} hs"
-    return re.sub(
+    new_html, n = re.subn(
         r'(Próximos 7 días · ).*?(</div>)',
         rf'\g<1>{stamp}\2',
         html,
         count=1,
+        flags=re.DOTALL,
     )
+    if n == 0:
+        log("AVISO: no se encontró el patrón de timestamp en el HTML.")
+    else:
+        log(f"Timestamp actualizado: {stamp}")
+    return new_html
 
 
 def update_html(events: list) -> None:
