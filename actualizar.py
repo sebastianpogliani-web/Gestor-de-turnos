@@ -42,7 +42,7 @@ CALENDAR_ID = (
 LOCAL_TZ    = ZoneInfo("America/Argentina/Buenos_Aires")
 SCOPES      = ["https://www.googleapis.com/auth/calendar.readonly"]
 MESES       = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"]
-EXCLUIR     = ["NO AGENDAR", "OJS", "C1091009 JSK", "VISITA DE MONITOREO"]
+EXCLUIR     = ["no agendar", "ojs", "c1091009 jsk", "visita de monitoreo"]
 
 
 # ── logging ───────────────────────────────────────────────────────────────────
@@ -58,8 +58,8 @@ def log(msg: str) -> None:
 # ── filtrado ──────────────────────────────────────────────────────────────────
 
 def _excluded(title: str) -> bool:
-    t = title.strip().upper()
-    return any(k in t for k in EXCLUIR) or t.startswith("SSC")
+    t = title.strip().casefold()
+    return any(k in t for k in EXCLUIR) or t.startswith("ssc")
 
 
 # ── autenticación OAuth2 ──────────────────────────────────────────────────────
