@@ -42,7 +42,7 @@ CALENDAR_ID = (
 LOCAL_TZ    = ZoneInfo("America/Argentina/Buenos_Aires")
 SCOPES      = ["https://www.googleapis.com/auth/calendar.readonly"]
 MESES       = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"]
-EXCLUIR     = ["NO AGENDAR", "OJS", "C1091009 JSK"]
+EXCLUIR     = ["NO AGENDAR", "OJS", "C1091009 JSK", "VISITA DE MONITOREO"]
 
 
 # ── logging ───────────────────────────────────────────────────────────────────
