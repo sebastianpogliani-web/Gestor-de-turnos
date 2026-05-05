@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monitor de Visitas Médicas</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    .page-header {
+      max-width: 1200px;
+      margin: 0 auto 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .logo-area { display: flex; align-items: center; gap: 14px; }
+    .logo-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+    }
+    h1 { font-size: 1.55rem; font-weight: 700; color: #f8fafc; }
+    .subtitle { font-size: 0.85rem; color: #94a3b8; margin-top: 2px; }
+    .stats-bar { display: flex; gap: 12px; flex-wrap: wrap; }
+    .stat-pill {
+      background: #1e293b; border: 1px solid #334155;
+      border-radius: 999px; padding: 6px 16px;
+      font-size: 0.82rem; color: #94a3b8;
+    }
+    .stat-pill strong { color: #f8fafc; }
+
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    .day-block {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .day-block.today {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 1px #6366f1, 0 8px 32px rgba(99,102,241,.18);
+    }
+    .day-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px;
+      background: #0f172a;
+      border-bottom: 1px solid #334155;
+    }
+    .day-title { display: flex; align-items: center; gap: 10px; }
+    .today-badge {
+      background: #6366f1; color: #fff;
+      font-size: 0.7rem; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; letter-spacing: .05em;
+    }
+    .day-name { font-size: 1rem; font-weight: 600; color: #f1f5f9; text-transform: capitalize; }
+    .day-total { font-size: 0.8rem; color: #64748b; }
+
+    .shifts-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .shift-col { border-right: 1px solid #334155; }
+    .shift-col:last-child { border-right: none; }
+
+    .shift-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 16px;
+      font-size: 0.82rem; font-weight: 600; color: #fff;
+    }
+    .shift-icon { font-size: 1rem; }
+    .shift-label { flex: 1; }
+    .badge {
+      background: rgba(255,255,255,.22);
+      border-radius: 999px; padding: 1px 8px;
+      font-size: 0.75rem; font-weight: 700;
+    }
+
+    .cap-bar-wrap {
+      height: 4px; background: #0f172a; margin: 0 16px;
+    }
+    .cap-bar { height: 4px; border-radius: 2px; transition: width .4s; }
+    .cap-label {
+      font-size: 0.68rem; color: #64748b;
+      text-align: right; padding: 2px 16px 6px;
+    }
+
+    .shift-body { padding: 10px 12px 12px; min-height: 72px; }
+
+    .event-card {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 9px 12px;
+      margin-bottom: 7px;
+    }
+    .event-card:last-child { margin-bottom: 0; }
+    .ev-header { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+    .ev-time { font-size: 0.76rem; font-weight: 700; color: #94a3b8; }
+    .ev-dur {
+      font-size: 0.68rem; color: #64748b;
+      background: #1e293b; border-radius: 4px; padding: 1px 6px;
+    }
+    .ev-title { font-size: 0.86rem; font-weight: 600; color: #e2e8f0; }
+    .ev-loc { font-size: 0.73rem; color: #64748b; margin-top: 4px; }
+    .ev-desc {
+      font-size: 0.73rem; color: #94a3b8;
+      margin-top: 5px; line-height: 1.4;
+      border-top: 1px solid #1e293b; padding-top: 5px;
+      white-space: pre-wrap;
+    }
+
+    .empty { text-align: center; color: #475569; font-size: 0.78rem; padding: 22px 0; }
+    .no-events {
+      text-align: center; color: #64748b;
+      font-size: 1rem; padding: 60px;
+      background: #1e293b; border-radius: 16px;
+    }
+    .page-footer {
+      max-width: 1200px; margin: 24px auto 0;
+      text-align: right; font-size: 0.73rem; color: #475569;
+    }
+
+    @media (max-width: 700px) {
+      .shifts-grid { grid-template-columns: 1fr; }
+      .shift-col { border-right: none; border-bottom: 1px solid #334155; }
+      .shift-col:last-child { border-bottom: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="page-header">
+    <div class="logo-area">
+      <div class="logo-icon">🏥</div>
+      <div>
+        <h1>Monitor de Visitas Médicas</h1>
+        <div class="subtitle">5 de mayo</div>
+      </div>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-pill"><strong>6</strong> días</div>
+      <div class="stat-pill"><strong>25</strong> visitas totales</div>
+    </div>
+  </header>
+
+  <div class="container">
+    
+      <div class="day-block today">
+        <div class="day-header">
+          <div class="day-title">
+            <span class="today-badge">HOY</span>
+            <span class="day-name">Martes 5 de mayo</span>
+          </div>
+          <span class="day-total">6 visitas</span>
+        </div>
+        <div class="shifts-grid">
+          
+      <div class="shift-col shift-manana">
+        <div class="shift-header" style="background:#d97706">
+          <span class="shift-icon">🌅</span>
+          <span class="shift-label">Mañana</span>
+          <span class="badge">3</span>
+        </div>
+        
+        <div class="cap-bar-wrap" title="3 de 8 turnos">
+          <div class="cap-bar" style="width:38%;background:#22c55e"></div>
+        </div>
+        <div class="cap-label">3 / 8</div>
+        <div class="shift-body">
+          
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">09:00</span>
+            <span class="ev-dur">3h 30min</span>
+          </div>
+          <div class="ev-title">C4771002 VISITA 1 SAAVEDRA (Inzeo)</div>
+          
+          
+        </div>
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">09:00</span>
+            <span class="ev-dur">3h 00min</span>
+          </div>
+          <div class="ev-title">V2 0041 Carrano</div>
+          
+          
+        </div>
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">09:00</span>
+            <span class="ev-dur">5h 00min</span>
+          </div>
+          <div class="ev-title">V1 041 Saturnino Mi??o Hitzig</div>
+          
+          
+        </div>
+        </div>
+      </div>
+          
+      <div class="shift-col shift-mediodia">
+        <div class="shift-header" style="background:#059669">
+          <span class="shift-icon">☀️</span>
+          <span class="shift-label">Mediodía</span>
+          <span class="badge">3</span>
+        </div>
+        
+        <div class="cap-bar-wrap" title="3 de 9 turnos">
+          <div class="cap-bar" style="width:33%;background:#22c55e"></div>
+        </div>
+        <div class="cap-label">3 / 9</div>
+        <div class="shift-body">
+          
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">12:00</span>
+            <span class="ev-dur">1h 00min</span>
+          </div>
+          <div class="ev-title">C1091009 JSK - Visita 1 - Dapelo - 41450750</div>
+          
+          
+        </div>
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">12:00</span>
+            <span class="ev-dur">4h 00min</span>
+          </div>
+          <div class="ev-title">BI 1397-0014 VISITA 4 ID ARG020-009</div>
+          
+          
+        </div>
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">13:00</span>
+            <span class="ev-dur">2h 00min</span>
+          </div>
+          <div class="ev-title">C4771002 - Visita no programada (potCDI)- SARMIENTO</div>
+          
+          
+        </div>
+        </div>
+      </div>
+          
+      <div class="shift-col shift-tarde">
+        <div class="shift-header" style="background:#4f46e5">
+          <span class="shift-icon">🌆</span>
+          <span class="shift-label">Tarde</span>
+          <span class="badge">0</span>
+        </div>
+        
+        <div class="cap-bar-wrap" title="0 de 5 turnos">
+          <div class="cap-bar" style="width:0%;background:#22c55e"></div>
+        </div>
+        <div class="cap-label">0 / 5</div>
+        <div class="shift-body">
+          <div class="empty">Sin visitas</div>
+        </div>
+      </div>
+        </div>
+      </div>
+      <div class="day-block ">
+        <div class="day-header">
+          <div class="day-title">
+            
+            <span class="day-name">Miércoles 6 de mayo</span>
+          </div>
+          <span class="day-total">5 visitas</span>
+        </div>
+        <div class="shifts-grid">
+          
+      <div class="shift-col shift-manana">
+        <div class="shift-header" style="background:#d97706">
+          <span class="shift-icon">🌅</span>
+          <span class="shift-label">Mañana</span>
+          <span class="badge">2</span>
+        </div>
+        
+        <div class="cap-bar-wrap" title="2 de 5 turnos">
+          <div class="cap-bar" style="width:40%;background:#22c55e"></div>
+        </div>
+        <div class="cap-label">2 / 5</div>
+        <div class="shift-body">
+          
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">09:00</span>
+            <span class="ev-dur">3h 30min</span>
+          </div>
+          <div class="ev-title">C4771002 VISITA 1 DELGADO (Inzeo)</div>
+          
+          
+        </div>
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">10:00</span>
+            <span class="ev-dur">3h 00min</span>
+          </div>
+          <div class="ev-title">V3 ID:014 Fernandez</div>
+          
+          
+        </div>
+        </div>
+      </div>
+          
+      <div class="shift-col shift-mediodia">
+        <div class="shift-header" style="background:#059669">
+          <span class="shift-icon">☀️</span>
+          <span class="shift-label">Mediodía</span>
+          <span class="badge">2</span>
+        </div>
+        
+        <div class="cap-bar-wrap" title="2 de 6 turnos">
+          <div class="cap-bar" style="width:33%;background:#22c55e"></div>
+        </div>
+        <div class="cap-label">2 / 6</div>
+        <div class="shift-body">
+          
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">12:00</span>
+            <span class="ev-dur">4h 00min</span>
+          </div>
+          <div class="ev-title">CIDARA - Visita de selecci??n (Santoro)</div>
+          
+          
+        </div>
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">13:00</span>
+            <span class="ev-dur">3h 00min</span>
+          </div>
+          <div class="ev-title">0256_V1 IAN (Inzeo)</div>
+          
+          
+        </div>
+        </div>
+      </div>
+          
+      <div class="shift-col shift-tarde">
+        <div class="shift-header" style="background:#4f46e5">
+          <span class="shift-icon">🌆</span>
+          <span class="shift-label">Tarde</span>
+          <span class="badge">1</span>
+        </div>
+        
+        <div class="cap-bar-wrap" title="1 de 3 turnos">
+          <div class="cap-bar" style="width:33%;background:#22c55e"></div>
+        </div>
+        <div class="cap-label">1 / 3</div>
+        <div class="shift-body">
+          
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">15:00</span>
+            <span class="ev-dur">3h 00min</span>
+          </div>
+          <div class="ev-title">CIDARA V1 S??nchez, Rub??n</div>
+          
+          
+        </div>
+        </div>
+      </div>
+        </div>
+      </div>
+      <div class="day-block ">
+        <div class="day-header">
+          <div class="day-title">
+            
+            <span class="day-name">Jueves 7 de mayo</span>
+          </div>
+          <span class="day-total">6 visitas</span>
+        </div>
+        <div class="shifts-grid">
+          
+      <div class="shift-col shift-manana">
+        <div class="shift-header" style="background:#d97706">
+          <span class="shift-icon">🌅</span>
+          <span class="shift-label">Mañana</span>
+          <span class="badge">4</span>
+        </div>
+        
+        <div class="cap-bar-wrap" title="4 de 8 turnos">
+          <div class="cap-bar" style="width:50%;background:#22c55e"></div>
+        </div>
+        <div class="cap-label">4 / 8</div>
+        <div class="shift-body">
+          
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">09:00</span>
+            <span class="ev-dur">3h 00min</span>
+          </div>
+          <div class="ev-title">V2 041 (1015) Hitzig</div>
+          
+          
+        </div>
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">09:00</span>
+            <span class="ev-dur">5h 00min</span>
+          </div>
+          <div class="ev-title">041 v1 Tolentino, Julio</div>
+          
+          
+        </div>
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">09:00</span>
+            <span class="ev-dur">4h 00min</span>
+          </div>
+          <div class="ev-title"> SSC_C4771002_V1_Roberto Serani</div>
+          
+          
+        </div>
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">10:00</span>
+            <span class="ev-dur">3h 00min</span>
+          </div>
+          <div class="ev-title">V3 ID:012 Fernandez</div>
+          
+          
+        </div>
+        </div>
+      </div>
+          
+      <div class="shift-col shift-mediodia">
+        <div class="shift-header" style="background:#059669">
+          <span class="shift-icon">☀️</span>
+          <span class="shift-label">Mediodía</span>
+          <span class="badge">2</span>
+        </div>
+        
+        <div class="cap-bar-wrap" title="2 de 9 turnos">
+          <div class="cap-bar" style="width:22%;background:#22c55e"></div>
+        </div>
+        <div class="cap-label">2 / 9</div>
+        <div class="shift-body">
+          
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">13:00</span>
+            <span class="ev-dur">2h 30min</span>
+          </div>
+          <div class="ev-title">V1_EQC_C4771002_MORALES</div>
+          
+          
+        </div>
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">13:00</span>
+            <span class="ev-dur">5h 00min</span>
+          </div>
+          <div class="ev-title">041 v1 Lavalle, Angel</div>
+          
+          
+        </div>
+        </div>
+      </div>
+          
+      <div class="shift-col shift-tarde">
+        <div class="shift-header" style="background:#4f46e5">
+          <span class="shift-icon">🌆</span>
+          <span class="shift-label">Tarde</span>
+          <span class="badge">0</span>
+        </div>
+        
+        <div class="cap-bar-wrap" title="0 de 5 turnos">
+          <div class="cap-bar" style="width:0%;background:#22c55e"></div>
+        </div>
+        <div class="cap-label">0 / 5</div>
+        <div class="shift-body">
+          <div class="empty">Sin visitas</div>
+        </div>
+      </div>
+        </div>
+      </div>
+      <div class="day-block ">
+        <div class="day-header">
+          <div class="day-title">
+            
+            <span class="day-name">Viernes 8 de mayo</span>
+          </div>
+          <span class="day-total">5 visitas</span>
+        </div>
+        <div class="shifts-grid">
+          
+      <div class="shift-col shift-manana">
+        <div class="shift-header" style="background:#d97706">
+          <span class="shift-icon">🌅</span>
+          <span class="shift-label">Mañana</span>
+          <span class="badge">3</span>
+        </div>
+        
+        <div class="cap-bar-wrap" title="3 de 8 turnos">
+          <div class="cap-bar" style="width:38%;background:#22c55e"></div>
+        </div>
+        <div class="cap-label">3 / 8</div>
+        <div class="shift-body">
+          
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">09:00</span>
+            <span class="ev-dur">4h 00min</span>
+          </div>
+          <div class="ev-title">C4771002-V1_SALEM Hitzig</div>
+          
+          
+        </div>
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">09:00</span>
+            <span class="ev-dur">1h 00min</span>
+          </div>
+          <div class="ev-title">1002 V2 ID: 048 Fernandez</div>
+          
+          
+        </div>
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">10:15</span>
+            <span class="ev-dur">3h 30min</span>
+          </div>
+          <div class="ev-title">C4771002 VISITA1 DEL HOYO</div>
+          
+          
+        </div>
+        </div>
+      </div>
+          
+      <div class="shift-col shift-mediodia">
+        <div class="shift-header" style="background:#059669">
+          <span class="shift-icon">☀️</span>
+          <span class="shift-label">Mediodía</span>
+          <span class="badge">1</span>
+        </div>
+        
+        <div class="cap-bar-wrap" title="1 de 9 turnos">
+          <div class="cap-bar" style="width:11%;background:#22c55e"></div>
+        </div>
+        <div class="cap-label">1 / 9</div>
+        <div class="shift-body">
+          
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">12:00</span>
+            <span class="ev-dur">1h 00min</span>
+          </div>
+          <div class="ev-title">C1091009 JSK - Visita 1 - Livingston - 38616569</div>
+          
+          
+        </div>
+        </div>
+      </div>
+          
+      <div class="shift-col shift-tarde">
+        <div class="shift-header" style="background:#4f46e5">
+          <span class="shift-icon">🌆</span>
+          <span class="shift-label">Tarde</span>
+          <span class="badge">1</span>
+        </div>
+        
+        <div class="cap-bar-wrap" title="1 de 6 turnos">
+          <div class="cap-bar" style="width:17%;background:#22c55e"></div>
+        </div>
+        <div class="cap-label">1 / 6</div>
+        <div class="shift-body">
+          
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">14:00</span>
+            <span class="ev-dur">3h 00min</span>
+          </div>
+          <div class="ev-title">C1091009 V1(EQC)- Rossi Trujillo Leque</div>
+          
+          
+        </div>
+        </div>
+      </div>
+        </div>
+      </div>
+      <div class="day-block ">
+        <div class="day-header">
+          <div class="day-title">
+            
+            <span class="day-name">Lunes 11 de mayo</span>
+          </div>
+          <span class="day-total">2 visitas</span>
+        </div>
+        <div class="shifts-grid">
+          
+      <div class="shift-col shift-manana">
+        <div class="shift-header" style="background:#d97706">
+          <span class="shift-icon">🌅</span>
+          <span class="shift-label">Mañana</span>
+          <span class="badge">1</span>
+        </div>
+        
+        <div class="cap-bar-wrap" title="1 de 9 turnos">
+          <div class="cap-bar" style="width:11%;background:#22c55e"></div>
+        </div>
+        <div class="cap-label">1 / 9</div>
+        <div class="shift-body">
+          
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">09:00</span>
+            <span class="ev-dur">3h 00min</span>
+          </div>
+          <div class="ev-title">CIDARA V1 De Vedia Jorge</div>
+          
+          
+        </div>
+        </div>
+      </div>
+          
+      <div class="shift-col shift-mediodia">
+        <div class="shift-header" style="background:#059669">
+          <span class="shift-icon">☀️</span>
+          <span class="shift-label">Mediodía</span>
+          <span class="badge">1</span>
+        </div>
+        
+        <div class="cap-bar-wrap" title="1 de 9 turnos">
+          <div class="cap-bar" style="width:11%;background:#22c55e"></div>
+        </div>
+        <div class="cap-label">1 / 9</div>
+        <div class="shift-body">
+          
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">13:00</span>
+            <span class="ev-dur">1h 00min</span>
+          </div>
+          <div class="ev-title">0256_V2.3 tel santi</div>
+          
+          
+        </div>
+        </div>
+      </div>
+          
+      <div class="shift-col shift-tarde">
+        <div class="shift-header" style="background:#4f46e5">
+          <span class="shift-icon">🌆</span>
+          <span class="shift-label">Tarde</span>
+          <span class="badge">0</span>
+        </div>
+        
+        <div class="cap-bar-wrap" title="0 de 4 turnos">
+          <div class="cap-bar" style="width:0%;background:#22c55e"></div>
+        </div>
+        <div class="cap-label">0 / 4</div>
+        <div class="shift-body">
+          <div class="empty">Sin visitas</div>
+        </div>
+      </div>
+        </div>
+      </div>
+      <div class="day-block ">
+        <div class="day-header">
+          <div class="day-title">
+            
+            <span class="day-name">Martes 12 de mayo</span>
+          </div>
+          <span class="day-total">1 visita</span>
+        </div>
+        <div class="shifts-grid">
+          
+      <div class="shift-col shift-manana">
+        <div class="shift-header" style="background:#d97706">
+          <span class="shift-icon">🌅</span>
+          <span class="shift-label">Mañana</span>
+          <span class="badge">1</span>
+        </div>
+        
+        <div class="cap-bar-wrap" title="1 de 8 turnos">
+          <div class="cap-bar" style="width:12%;background:#22c55e"></div>
+        </div>
+        <div class="cap-label">1 / 8</div>
+        <div class="shift-body">
+          
+        <div class="event-card">
+          <div class="ev-header">
+            <span class="ev-time">09:00</span>
+            <span class="ev-dur">3h 00min</span>
+          </div>
+          <div class="ev-title">V3 041 (ID:011) Hitzig</div>
+          
+          
+        </div>
+        </div>
+      </div>
+          
+      <div class="shift-col shift-mediodia">
+        <div class="shift-header" style="background:#059669">
+          <span class="shift-icon">☀️</span>
+          <span class="shift-label">Mediodía</span>
+          <span class="badge">0</span>
+        </div>
+        
+        <div class="cap-bar-wrap" title="0 de 9 turnos">
+          <div class="cap-bar" style="width:0%;background:#22c55e"></div>
+        </div>
+        <div class="cap-label">0 / 9</div>
+        <div class="shift-body">
+          <div class="empty">Sin visitas</div>
+        </div>
+      </div>
+          
+      <div class="shift-col shift-tarde">
+        <div class="shift-header" style="background:#4f46e5">
+          <span class="shift-icon">🌆</span>
+          <span class="shift-label">Tarde</span>
+          <span class="badge">0</span>
+        </div>
+        
+        <div class="cap-bar-wrap" title="0 de 5 turnos">
+          <div class="cap-bar" style="width:0%;background:#22c55e"></div>
+        </div>
+        <div class="cap-label">0 / 5</div>
+        <div class="shift-body">
+          <div class="empty">Sin visitas</div>
+        </div>
+      </div>
+        </div>
+      </div>
+  </div>
+
+  <footer class="page-footer">Generado el 05/05/2026 02:03 · i-Trials</footer>
+</body>
+</html>

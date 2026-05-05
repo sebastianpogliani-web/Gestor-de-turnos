@@ -1,0 +1,22 @@
+[2026-05-05 01:54:03] ==================================================
+[2026-05-05 01:54:03] Inicio de actualización automática
+[2026-05-05 01:54:03] Invocando: claude --print (prompt via stdin) ...
+[2026-05-05 01:54:03] ERROR: 'claude' no está en el PATH. Instalá Claude Code CLI.
+[2026-05-05 01:56:26] ==================================================
+[2026-05-05 01:56:26] Inicio de actualización automática
+[2026-05-05 01:56:26] Invocando: claude --print (prompt via stdin) ...
+[2026-05-05 01:56:26] ERROR: 'claude' no está en el PATH. Instalá Claude Code CLI.
+[2026-05-05 01:57:46] ==================================================
+[2026-05-05 01:57:46] Inicio de actualización automática
+[2026-05-05 01:57:46] Invocando: claude --print (prompt via stdin) ...
+[2026-05-05 01:58:01] Respuesta recibida: 82 caracteres
+[2026-05-05 01:58:01] ERROR: no se pudo parsear el JSON: Expecting value: line 1 column 1 (char 0)
+[2026-05-05 01:58:01] Fragmento recibido: Por favor, aprobá el permiso para acceder a Google Calendar y volvé a intentarlo.
+
+[2026-05-05 02:01:38] ==================================================
+[2026-05-05 02:01:38] Inicio de actualización automática
+[2026-05-05 02:01:38] Invocando: claude --print (prompt via stdin) ...
+[2026-05-05 02:01:53] Respuesta recibida: 115 caracteres
+[2026-05-05 02:01:53] ERROR: no se pudo parsear el JSON: Expecting value: line 1 column 1 (char 0)
+[2026-05-05 02:01:53] Fragmento recibido: Necesito que apruebes el permiso para acceder a Google Calendar. Una vez que lo apruebes, reintentaré la consulta.
+
