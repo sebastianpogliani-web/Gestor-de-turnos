@@ -31,8 +31,8 @@ jobs:
 
       - name: Escribir credenciales desde Secrets
         run: |
-          echo "${{ secrets.GOOGLE_CREDENTIALS }}" | base64 -d > credentials.json
-          echo "${{ secrets.GOOGLE_TOKEN }}"       | base64 -d > token.json
+          echo "${{ secrets.GOOGLE_CREDENTIALS }}" | tr -d '[:space:]' | base64 -d > credentials.json
+          echo "${{ secrets.GOOGLE_TOKEN }}"       | tr -d '[:space:]' | base64 -d > token.json
 
       - name: Correr actualizar.py
         run: python actualizar.py
