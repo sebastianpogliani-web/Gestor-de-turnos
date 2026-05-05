@@ -31,16 +31,17 @@ jobs:
             google-auth-oauthlib \
             tzdata
 
-      - name: Escribir credenciales desde Secrets
-        run: |
-          echo "${{ secrets.GOOGLE_CREDENTIALS }}" | tr -d '[:space:]' | base64 -d > credentials.json
-          echo "${{ secrets.GOOGLE_TOKEN }}"       | tr -d '[:space:]' | base64 -d > token.json
-
       - name: Configurar git y sincronizar
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git pull --rebase origin main
+          git fetch origin main
+          git reset --hard origin/main
+
+      - name: Escribir credenciales desde Secrets
+        run: |
+          echo "${{ secrets.GOOGLE_CREDENTIALS }}" | tr -d '[:space:]' | base64 -d > credentials.json
+          echo "${{ secrets.GOOGLE_TOKEN }}"       | tr -d '[:space:]' | base64 -d > token.json
 
       - name: Correr actualizar.py
         run: python actualizar.py
