@@ -94,11 +94,25 @@ function procesarDias(){
   return Array.from({length:7},(_,i)=>{
     const d=new Date(hoy); d.setDate(hoy.getDate()+i);
     const fs=fechaARG(d); const ds=d.getDay();
+    function getDisp(){
+      if(ds===6){
+        const key='sabado_'+d.getDate()+'/'+(d.getMonth()+1);
+        if(DISP[key]) return DISP[key];
+      }
+      return DISP[ds]||{M:0,D:0,T:0};
+    }
+    function getMed(){
+      if(ds===6){
+        const key='sabado_'+d.getDate()+'/'+(d.getMonth()+1);
+        if(MEDICOS[key]) return MEDICOS[key];
+      }
+      return MEDICOS[ds]||{M:'',D:'',T:''};
+    }
     const visitas=EVENTOS.filter(ev=>fechaARG(ev.ini)===fs);
     const cnt={M:0,D:0,T:0};
     visitas.forEach(ev=>{const h=parseInt(new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',hour12:false}).format(new Date(ev.ini)));cnt[turno(h)]++;});
-    const dp=DISP[ds]||{M:0,D:0,T:0};
-    const med=MEDICOS[ds]||{M:'',D:'',T:''};
+    const dp=getDisp();
+    const med=getMed();
     const probs=['M','D','T'].filter(t=>cnt[t]>dp[t]).map(t=>{return{t,v:cnt[t],d:dp[t],def:cnt[t]-dp[t]}});
     return{d,nombre:DIAS[ds],hayProb:probs.length>0,cnt,dp,med,visitas,probs};
   });
